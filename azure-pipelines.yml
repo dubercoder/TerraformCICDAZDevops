@@ -1,0 +1,82 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  rgname: 'Terraform-State'
+  sttfname: 'tfdeployments'
+  tfcontainer: 'tfstatecontainer'
+  tfkey: 'terraform.tfstate'
+
+stages:
+  - stage: tfvalidate
+    jobs:
+      - job: validate
+        continueOnError: false
+        steps:
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+            displayName: terraform Install
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: terraform init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Templates'
+              backendServiceArm: 'your subscription (xxxxxxx-xxxx-xxxx-xxxx-xxxxexxxxx)'
+              backendAzureRmResourceGroupName: '$(rgname)'
+              backendAzureRmStorageAccountName: '$(sttfname)'
+              backendAzureRmContainerName: '$(tfcontainer)'
+              backendAzureRmKey: '$(tfkey)'
+          - task: TerraformTaskV4@4
+            displayName: terraform validate
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Templates'
+  - stage: tfdeploy
+    condition: succeeded('tfvalidate')
+    dependsOn: tfvalidate
+    jobs:
+      - job: tfplananddeploy
+        steps:
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+            displayName: terraform Install
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: terraform init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Templates'
+              backendServiceArm: 'your subscription (xxxxxxx-xxxx-xxxx-xxxx-xxxxexxxxx)'
+              backendAzureRmResourceGroupName: '$(rgname)'
+              backendAzureRmStorageAccountName: '$(sttfname)'
+              backendAzureRmContainerName: '$(tfcontainer)'
+              backendAzureRmKey: '$(tfkey)'
+          - task: TerraformTaskV4@4
+            displayName: terraform plan
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Templates'
+              environmentServiceNameAzureRM: 'your subscription (xxxxxxx-xxxx-xxxx-xxxx-xxxxexxxxx)'
+          - task: TerraformTaskV4@4
+            displayName: terrafom apply auto aprove
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/Templates'
+              commandOptions: '-auto-approve'
+              environmentServiceNameAzureRM: 'your subscription (xxxxxxx-xxxx-xxxx-xxxx-xxxxexxxxx)'
+          
+          

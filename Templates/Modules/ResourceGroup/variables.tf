@@ -1,0 +1,5 @@
+variable "rgname" {
+}
+
+variable "location" {
+}
