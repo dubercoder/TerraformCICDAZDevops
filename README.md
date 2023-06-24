@@ -22,4 +22,4 @@ Crear también un filesystem para el datalake.
 **SOLUCIÓN**  <br>
 **El siguiente video muestra la metodología y el proceso de principio a fin para la construcción del código IaC.**  <br>
  <br>
-xxxx
+(https://youtu.be/vzsokDfwDYE)https://youtu.be/vzsokDfwDYE
